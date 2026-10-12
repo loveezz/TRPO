@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{.Title}}</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body class="login-body">
+  <div class="login-card">
+    <h1>Вход в систему</h1>
+    <p class="muted">Введите учетные данные рекрутера.</p>
+    {{if .Error}}<div class="alert error">{{.Error}}</div>{{end}}
+    <form method="post" action="/login" class="stack">
+      <label>Email<input type="email" name="email" value="{{if .Email}}{{.Email}}{{else}}admin@example.com{{end}}" required></label>
+      <label>Пароль<input type="password" name="password" value="admin123" required></label>
+      <button class="btn primary" type="submit">Войти</button>
+    </form>
+    <div class="demo-note"><b>Демо:</b> admin@example.com / admin123</div>
+  </div>
+</body>
+</html>

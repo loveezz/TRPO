@@ -1,0 +1,5 @@
+{{template "base_start" .}}
+<div class="page-head"><div><span class="eyebrow">Панель рекрутера</span><h1>Обзор системы</h1><p>Ключевые показатели базы кандидатов и вакансий.</p></div><a class="btn primary" href="/vacancies/new">+ Новая вакансия</a></div>
+<div class="stats"><div class="stat"><span>Кандидаты</span><b>{{.Stats.candidates}}</b><small>в базе данных</small></div><div class="stat"><span>Активные вакансии</span><b>{{.Stats.vacancies}}</b><small>открыто сейчас</small></div></div>
+<div class="card"><div class="card-head"><div><h2>Рабочий процесс</h2><p>Добавьте вакансию, задайте требуемые навыки и получите рейтинг кандидатов.</p></div></div><div class="steps"><div><b>1</b><span>Создать вакансию</span></div><div><b>2</b><span>Указать критерии и навыки</span></div><div><b>3</b><span>Получить список кандидатов</span></div><div><b>4</b><span>Просмотреть контакты</span></div></div></div>
+{{template "base_end" .}}

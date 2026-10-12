@@ -1,0 +1,32 @@
+{{define "base_start"}}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{.Title}}</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <nav>
+      <a href="/dashboard">Обзор</a>
+      <a href="/candidates">Кандидаты</a>
+      <a href="/vacancies">Вакансии</a>
+    </nav>
+    {{if .User}}
+    <div class="sidebar-user">
+      <div><b>{{.User.FullName}}</b><span>{{.User.Email}}</span></div>
+      <form action="/logout" method="post"><button class="link-btn">Выйти</button></form>
+    </div>
+    {{end}}
+  </aside>
+  <main class="content">
+{{end}}
+{{define "base_end"}}
+  </main>
+</div>
+</body>
+</html>
+{{end}}

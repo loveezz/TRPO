@@ -1,0 +1,18 @@
+{{template "base_start" .}}
+<div class="page-head"><div><span class="eyebrow">Карточка специалиста</span><h1>{{if .IsEdit}}Редактирование кандидата{{else}}Новый кандидат{{end}}</h1></div></div>
+<form class="card form-card" method="post"><div class="form-grid">
+<label>ФИО<input name="full_name" required value="{{if .IsEdit}}{{.Candidate.FullName}}{{end}}"></label>
+<label>Возраст<input name="age" type="number" required value="{{if .IsEdit}}{{.Candidate.Age}}{{end}}"></label>
+<label>Пол<select name="gender"><option {{if and .IsEdit (eq .Candidate.Gender "Мужской")}}selected{{end}}>Мужской</option><option {{if and .IsEdit (eq .Candidate.Gender "Женский")}}selected{{end}}>Женский</option></select></label>
+<label>Email<input name="email" type="email" required value="{{if .IsEdit}}{{.Candidate.Email}}{{end}}"></label>
+<label>Телефон<input name="phone" required value="{{if .IsEdit}}{{.Candidate.Phone}}{{end}}"></label>
+<label>Город<input name="city" required value="{{if .IsEdit}}{{.Candidate.City}}{{else}}Екатеринбург{{end}}"></label>
+<label>Желаемая должность<input name="position" required value="{{if .IsEdit}}{{.Candidate.Position}}{{end}}"></label>
+<label>Опыт, лет<input name="experience_years" type="number" step="0.5" required value="{{if .IsEdit}}{{.Candidate.ExperienceYears}}{{end}}"></label>
+<label>Образование<input name="education" required value="{{if .IsEdit}}{{.Candidate.Education}}{{else}}Высшее{{end}}"></label>
+<label>Тип занятости<select name="employment_type"><option {{if and .IsEdit (eq .Candidate.EmploymentType "Полная занятость")}}selected{{end}}>Полная занятость</option><option {{if and .IsEdit (eq .Candidate.EmploymentType "Удаленно")}}selected{{end}}>Удаленно</option><option {{if and .IsEdit (eq .Candidate.EmploymentType "Частичная занятость")}}selected{{end}}>Частичная занятость</option></select></label>
+<label>Ожидаемая зарплата<input name="salary_expectation" type="number" required value="{{if .IsEdit}}{{.Candidate.SalaryExpectation}}{{end}}"></label>
+<label class="span-2">Навыки через запятую<input name="skills" value="{{.SkillNames}}" placeholder="Python, FastAPI, PostgreSQL"></label>
+<label class="span-2">О кандидате<textarea name="about" rows="4">{{if .IsEdit}}{{.Candidate.About}}{{end}}</textarea></label>
+</div><div class="form-actions"><button class="btn primary">Сохранить</button><a class="btn ghost" href="/candidates">Отмена</a>{{if .IsEdit}}<button class="btn ghost" type="submit" formaction="/candidates/{{.Candidate.ID}}/delete" onclick="return confirm('Удалить кандидата?')">Удалить</button>{{end}}</div></form>
+{{template "base_end" .}}
