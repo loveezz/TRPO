@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"log"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 	"hrselect/internal/service"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 type App struct {
@@ -66,6 +68,17 @@ func internalError(c *fiber.Ctx, err error, where string) error {
 	// но печатаем их с контекстом для локализации.
 	log.Printf("[ERROR] %s: %v", where, err)
 	return fiber.ErrInternalServerError
+}
+
+// lookupError отделяет «записи нет» (404) от сбоя БД (500).
+// Раньше любая ошибка поиска превращалась в 404, а удаление несуществующей
+// записи — в 500, что маскировало настоящую причину.
+func lookupError(c *fiber.Ctx, err error, where string, id uint) error {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Printf("[WARN] %s: запись id=%d не найдена", where, id)
+		return fiber.ErrNotFound
+	}
+	return internalError(c, err, where)
 }
 
 func (a *App) Home(c *fiber.Ctx) error {
@@ -172,7 +185,7 @@ func (a *App) EditCandidatePage(c *fiber.Ctx) error {
 	}
 	candidate, err := a.Repo.CandidateByID(id)
 	if err != nil {
-		return fiber.ErrNotFound
+		return lookupError(c, err, "EditCandidatePage", id)
 	}
 	data := a.data(c, "Редактирование кандидата")
 	data["Candidate"] = candidate
@@ -209,7 +222,7 @@ func (a *App) UpdateCandidate(c *fiber.Ctx) error {
 	}
 	candidate, err := a.Repo.CandidateByID(id)
 	if err != nil {
-		return fiber.ErrNotFound
+		return lookupError(c, err, "UpdateCandidate", id)
 	}
 	if err := applyCandidateForm(&candidate, c); err != nil {
 		log.Printf("[WARN] UpdateCandidate id=%d: %v", id, err)
@@ -221,6 +234,7 @@ func (a *App) UpdateCandidate(c *fiber.Ctx) error {
 	}
 	skillNames := service.NormalizeSkills(c.FormValue("skills"))
 	if err := service.ValidateSkillNames(skillNames); err != nil {
+		log.Printf("[WARN] UpdateCandidate id=%d skills: %v raw=%q", id, err, c.FormValue("skills"))
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 	if err := a.Repo.SaveCandidate(&candidate, skillNames); err != nil {
@@ -235,7 +249,7 @@ func (a *App) DeleteCandidate(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString("Некорректный идентификатор кандидата.")
 	}
 	if err := a.Repo.DeleteCandidate(id); err != nil {
-		return internalError(c, err, "DeleteCandidate")
+		return lookupError(c, err, "DeleteCandidate", id)
 	}
 	return c.Redirect("/candidates", fiber.StatusSeeOther)
 }
@@ -306,7 +320,7 @@ func (a *App) EditVacancyPage(c *fiber.Ctx) error {
 	}
 	v, err := a.Repo.VacancyByID(id)
 	if err != nil {
-		return fiber.ErrNotFound
+		return lookupError(c, err, "EditVacancyPage", id)
 	}
 	data := a.data(c, "Редактирование вакансии")
 	data["Vacancy"] = v
@@ -326,6 +340,7 @@ func (a *App) CreateVacancy(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 	if err := service.ValidateSkillNames(skillNames); err != nil {
+		log.Printf("[WARN] CreateVacancy skills: %v raw=%q", err, c.FormValue("skills"))
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 	if err := a.Repo.SaveVacancy(&v, skillNames); err != nil {
@@ -341,17 +356,19 @@ func (a *App) UpdateVacancy(c *fiber.Ctx) error {
 	}
 	v, err := a.Repo.VacancyByID(id)
 	if err != nil {
-		return fiber.ErrNotFound
+		return lookupError(c, err, "UpdateVacancy", id)
 	}
 	if err := applyVacancyForm(&v, c); err != nil {
 		log.Printf("[WARN] UpdateVacancy id=%d: %v", id, err)
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 	if err := validateVacancy(v); err != nil {
+		log.Printf("[WARN] UpdateVacancy id=%d validate: %v (vacancy=%+v)", id, err, v)
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 	skillNames := service.NormalizeSkills(c.FormValue("skills"))
 	if err := service.ValidateSkillNames(skillNames); err != nil {
+		log.Printf("[WARN] UpdateVacancy id=%d skills: %v raw=%q", id, err, c.FormValue("skills"))
 		return c.Status(fiber.StatusBadRequest).SendString(err.Error())
 	}
 	if err := a.Repo.SaveVacancy(&v, skillNames); err != nil {
@@ -366,7 +383,7 @@ func (a *App) DeleteVacancy(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString("Некорректный идентификатор вакансии.")
 	}
 	if err := a.Repo.DeleteVacancy(id); err != nil {
-		return internalError(c, err, "DeleteVacancy")
+		return lookupError(c, err, "DeleteVacancy", id)
 	}
 	return c.Redirect("/vacancies", fiber.StatusSeeOther)
 }
@@ -377,7 +394,7 @@ func (a *App) ToggleVacancy(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).SendString("Некорректный идентификатор вакансии.")
 	}
 	if err := a.Repo.ToggleVacancy(id); err != nil {
-		return internalError(c, err, "ToggleVacancy")
+		return lookupError(c, err, "ToggleVacancy", id)
 	}
 	return c.Redirect("/vacancies", fiber.StatusSeeOther)
 }
@@ -447,7 +464,7 @@ func (a *App) MatchVacancy(c *fiber.Ctx) error {
 	}
 	v, err := a.Repo.VacancyByID(id)
 	if err != nil {
-		return fiber.ErrNotFound
+		return lookupError(c, err, "MatchVacancy", id)
 	}
 	candidates, err := a.Repo.ListCandidates()
 	if err != nil {
