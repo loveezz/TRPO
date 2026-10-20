@@ -513,3 +513,23 @@ docker run --rm -v "$PWD":/src -w /src golang:1.23-alpine go test ./...
 ```bash
 go test ./...
 ```
+## Практические работы 6, 7: оптимизация подбора по вакансии
+
+- Простой алгоритм (эталон): `internal/service/matching_simple.go` — `RankCandidatesSimple`.
+- Оптимизированный: `internal/service/matching.go` — вспомогательный класс `VacancyProfile`, `RankTopCandidates` (куча на `limit` лучших, отсечение по верхней границе, кэши нормализации).
+- Загрузка кандидатов для подбора: `Repository.CandidatesForMatching` (только нужные поля).
+- Страница `/vacancies/:id/match?top=20` показывает лучших (`top=0` — всех).
+
+```bash
+go test ./...
+go test ./internal/service/ -run XXX -bench Rank -benchtime 2s
+```
+
+## Практическая работа 8: программа «Список слов»
+
+Папка `wordlist/` (Python 3 + tkinter, без внешних зависимостей):
+
+```bash
+python wordlist/app.py
+python -m unittest discover -s wordlist -v
+```

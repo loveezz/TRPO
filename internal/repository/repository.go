@@ -176,6 +176,18 @@ func (r *Repository) ListCandidates() ([]models.Candidate, error) {
 	return items, err
 }
 
+// CandidatesForMatching загружает кандидатов для подбора на вакансию.
+// В отличие от ListCandidates выбираются только поля, нужные для расчета
+// рейтинга и вывода (без текстового поля about), и нет ORDER BY:
+// порядок все равно задает алгоритм подбора.
+func (r *Repository) CandidatesForMatching() ([]models.Candidate, error) {
+	var items []models.Candidate
+	err := r.DB.Select("id", "full_name", "email", "phone", "city", "position",
+		"experience_years", "education", "employment_type", "salary_expectation").
+		Preload("Skills").Order("id").Find(&items).Error
+	return items, err
+}
+
 func (r *Repository) CandidateByID(id uint) (models.Candidate, error) {
 	var c models.Candidate
 	err := r.DB.Preload("Skills").First(&c, id).Error

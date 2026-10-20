@@ -457,6 +457,10 @@ func validateVacancy(v models.Vacancy) error {
 	return service.ValidateVacancy(v)
 }
 
+// defaultMatchLimit — сколько лучших кандидатов показывать при подборе,
+// если параметр ?top= не задан (top=0 — показать всех).
+const defaultMatchLimit = 20
+
 func (a *App) MatchVacancy(c *fiber.Ctx) error {
 	id, err := parseID(c)
 	if err != nil {
@@ -466,14 +470,24 @@ func (a *App) MatchVacancy(c *fiber.Ctx) error {
 	if err != nil {
 		return lookupError(c, err, "MatchVacancy", id)
 	}
-	candidates, err := a.Repo.ListCandidates()
-	if err != nil {
-		return internalError(c, err, "ListCandidates")
+	limit := parseFilterInt(c.Query("top"), "top")
+	if limit < 0 {
+		log.Printf("[WARN] MatchVacancy: top=%d < 0, выводятся все кандидаты", limit)
+		limit = 0
 	}
-	results := service.RankCandidates(candidates, v)
+	if c.Query("top") == "" {
+		limit = defaultMatchLimit
+	}
+	candidates, err := a.Repo.CandidatesForMatching()
+	if err != nil {
+		return internalError(c, err, "CandidatesForMatching")
+	}
+	results := service.RankTopCandidates(candidates, v, limit)
 	data := a.data(c, "Подбор")
 	data["Vacancy"] = v
 	data["Results"] = results
+	data["Total"] = len(candidates)
+	data["Limit"] = limit
 	return c.Render("matching", data)
 }
 
