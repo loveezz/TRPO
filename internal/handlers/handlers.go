@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"hrselect/internal/models"
 	"hrselect/internal/repository"
@@ -482,12 +484,24 @@ func (a *App) MatchVacancy(c *fiber.Ctx) error {
 	if err != nil {
 		return internalError(c, err, "CandidatesForMatching")
 	}
+	// Замер времени: оптимизированный алгоритм и, для сравнения, простой
+	// алгоритм до ПР 6-7 на тех же данных (результат простого не выводится).
+	start := time.Now()
 	results := service.RankTopCandidates(candidates, v, limit)
+	optimized := time.Since(start)
+	start = time.Now()
+	service.RankCandidatesSimple(candidates, v)
+	simple := time.Since(start)
 	data := a.data(c, "Подбор")
 	data["Vacancy"] = v
 	data["Results"] = results
 	data["Total"] = len(candidates)
 	data["Limit"] = limit
+	data["TimeOptimized"] = formatDuration(optimized)
+	data["TimeSimple"] = formatDuration(simple)
+	if optimized > 0 {
+		data["Speedup"] = strings.Replace(fmt.Sprintf("%.1f", float64(simple)/float64(optimized)), ".", ",", 1)
+	}
 	return c.Render("matching", data)
 }
 
@@ -497,4 +511,9 @@ func joinSkillNames(skills []models.Skill) string {
 		names = append(names, s.Name)
 	}
 	return strings.Join(names, ", ")
+}
+
+// formatDuration выводит длительность в миллисекундах с точностью до 0,01 мс.
+func formatDuration(d time.Duration) string {
+	return strings.Replace(fmt.Sprintf("%.2f мс", float64(d.Microseconds())/1000), ".", ",", 1)
 }

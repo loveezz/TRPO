@@ -169,6 +169,33 @@ func benchCandidates(b *testing.B, n int) ([]models.Candidate, models.Vacancy) {
 	return genCandidates(n, 42), testVacancies()[0]
 }
 
+func BenchmarkRankSimple1k(b *testing.B) {
+	cs, v := benchCandidates(b, 1000)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		RankCandidatesSimple(cs, v)
+	}
+}
+
+func BenchmarkRankOptimizedAll1k(b *testing.B) {
+	cs, v := benchCandidates(b, 1000)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		RankCandidates(cs, v)
+	}
+}
+
+func BenchmarkRankOptimizedTop20_1k(b *testing.B) {
+	cs, v := benchCandidates(b, 1000)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		RankTopCandidates(cs, v, 20)
+	}
+}
+
 func BenchmarkRankSimple10k(b *testing.B) {
 	cs, v := benchCandidates(b, 10000)
 	b.ReportAllocs()

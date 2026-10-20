@@ -30,6 +30,7 @@ func TestMatchingTemplateRendersTopN(t *testing.T) {
 	app.Get("/m", func(c *fiber.Ctx) error {
 		return c.Render("matching", fiber.Map{
 			"Title": "Подбор", "Vacancy": v, "Total": len(candidates), "Limit": 2,
+			"TimeOptimized": "0,05 мс", "TimeSimple": "0,20 мс", "Speedup": "4,0",
 			"Results": service.RankTopCandidates(candidates, v, 2),
 		})
 	})
@@ -42,7 +43,7 @@ func TestMatchingTemplateRendersTopN(t *testing.T) {
 	if resp.StatusCode != 200 {
 		t.Fatalf("код ответа %d: %s", resp.StatusCode, page)
 	}
-	for _, want := range []string{"Показано 2 из 3 кандидатов", "Анна", "Борис", `value="20"`} {
+	for _, want := range []string{"Показано 2 из 3 кандидатов", "Анна", "Борис", `value="20"`, "Подбор: <b>0,05 мс</b>", "быстрее в 4,0 раза"} {
 		if !strings.Contains(page, want) {
 			t.Fatalf("на странице нет %q", want)
 		}

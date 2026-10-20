@@ -33,6 +33,9 @@ func main() {
 	if err := seed.Run(db); err != nil {
 		log.Fatal(err)
 	}
+	if err := seed.GenerateCandidates(db, cfg.SeedCandidates); err != nil {
+		log.Fatal(err)
+	}
 
 	engine := html.New(templateDir(), ".html")
 	engine.AddFunc("joinReasons", func(items []string) string {

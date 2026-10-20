@@ -8,9 +8,10 @@ import (
 )
 
 type Config struct {
-	Port          string
-	DatabaseDSN   string
-	SessionSecret string
+	Port           string
+	DatabaseDSN    string
+	SessionSecret  string
+	SeedCandidates int // сколько всего кандидатов сгенерировать при запуске (0 — не генерировать)
 }
 
 func Load() Config {
@@ -23,6 +24,13 @@ func Load() Config {
 	if p, err := strconv.Atoi(strings.TrimSpace(cfg.Port)); err != nil || p < 1 || p > 65535 {
 		log.Printf("[WARN] config: APP_PORT=%q некорректен, использован порт 8000", cfg.Port)
 		cfg.Port = "8000"
+	}
+	if raw := strings.TrimSpace(os.Getenv("SEED_CANDIDATES")); raw != "" {
+		if n, err := strconv.Atoi(raw); err != nil || n < 0 || n > 100000 {
+			log.Printf("[WARN] config: SEED_CANDIDATES=%q некорректен (ожидается 0..100000), генерация отключена", raw)
+		} else {
+			cfg.SeedCandidates = n
+		}
 	}
 	if strings.TrimSpace(cfg.DatabaseDSN) == "" {
 		log.Printf("[WARN] config: DATABASE_DSN пуст")

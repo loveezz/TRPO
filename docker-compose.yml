@@ -19,6 +19,7 @@ services:
       APP_PORT: 8000
       DATABASE_DSN: "host=db user=candidate_user password=candidate_pass dbname=candidates_db port=5432 sslmode=disable TimeZone=Asia/Yekaterinburg"
       SESSION_SECRET: "study-secret-change-me"
+      SEED_CANDIDATES: 1000
     ports:
       - "8000:8000"
     depends_on:

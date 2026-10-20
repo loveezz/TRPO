@@ -178,8 +178,8 @@ func (r *Repository) ListCandidates() ([]models.Candidate, error) {
 
 // CandidatesForMatching загружает кандидатов для подбора на вакансию.
 // В отличие от ListCandidates выбираются только поля, нужные для расчета
-// рейтинга и вывода (без текстового поля about), и нет ORDER BY:
-// порядок все равно задает алгоритм подбора.
+// рейтинга и вывода (без текстового поля about). Сортировка по id нужна
+// только для стабильного порядка при равном рейтинге.
 func (r *Repository) CandidatesForMatching() ([]models.Candidate, error) {
 	var items []models.Candidate
 	err := r.DB.Select("id", "full_name", "email", "phone", "city", "position",
